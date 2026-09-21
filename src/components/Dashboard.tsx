@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Background, Controls, Handle, Position, ReactFlow, type Edge, type Node, type NodeProps } from '@xyflow/react'
-import { Activity, AlertTriangle, ArrowLeft, Blocks, BookOpen, Braces, ChevronRight, CircleDot, Database, Download, ExternalLink, File, FileCode2, FileJson, Folder, GitBranch, GitFork, KeyRound, Menu, Network, Package, Route, Search, ServerCog, ShieldCheck, Star, Terminal, Workflow, Wrench, X } from 'lucide-react'
+import { Activity, AlertTriangle, ArrowLeft, Blocks, BookOpen, Braces, ChevronRight, CircleDot, CloudDownload, Database, Download, ExternalLink, File, FileCode2, FileJson, Folder, GitBranch, GitFork, KeyRound, Menu, Moon, Network, Package, PanelLeftClose, PanelLeftOpen, Route, Search, ServerCog, ShieldCheck, Star, Sun, Terminal, Workflow, Wrench, X } from 'lucide-react'
 import type { FileInsight, Finding, RepoFile, RepoResult } from '../types'
 
 type Tab = 'overview' | 'guide' | 'impact' | 'health' | 'history' | 'architecture' | 'components' | 'flows' | 'repository' | 'dependencies' | 'data' | 'api' | 'infrastructure' | 'security'
@@ -23,11 +23,12 @@ function FindingCard({ item }: { item: Finding }) {
   return <article className={`finding-card ${item.tone || 'green'}`}><span className="finding-dot" /><div><h4>{item.label}</h4><p>{item.detail}</p><div className="evidence">{item.evidence.slice(0, 3).map(e => <code key={e}>{e}</code>)}</div></div></article>
 }
 
-export function Dashboard({ result, onReset }: { result: RepoResult; onReset: () => void }) {
+export function Dashboard({ result, onReset, theme, onToggleTheme }: { result: RepoResult; onReset: () => void; theme: 'dark' | 'light'; onToggleTheme: () => void }) {
   const [tab, setTab] = useState<Tab>('overview')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<RepoFile | null>(null)
   const [sidebar, setSidebar] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('repolens-sidebar-collapsed') === 'true')
   const { meta, files, analysis } = result
   const sourceFiles = files.filter(f => f.type === 'blob')
   const filteredFiles = sourceFiles.filter(f => f.path.toLowerCase().includes(query.toLowerCase())).slice(0, 300)
@@ -41,19 +42,26 @@ export function Dashboard({ result, onReset }: { result: RepoResult; onReset: ()
     download(`${meta.name}-repolens.md`, text, 'text/markdown')
   }
   function download(name: string, content: string, type: string) { const blob = new Blob([content], { type }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href) }
+  function toggleSidebar() {
+    setSidebarCollapsed(current => {
+      localStorage.setItem('repolens-sidebar-collapsed', String(!current))
+      return !current
+    })
+  }
 
-  return <div className="app-shell">
+  return <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
     <aside className={`sidebar ${sidebar ? 'open' : ''}`}>
-      <button className="mobile-close" onClick={() => setSidebar(false)}><X /></button>
+      <button className="mobile-close" onClick={() => setSidebar(false)} aria-label="Close navigation"><X /></button>
       <button className="brand dashboard-brand" onClick={onReset}><span className="brand-mark"><Braces size={19} /></span><span>RepoLens</span></button>
-      <button className="back-link" onClick={onReset}><ArrowLeft /> Analyze another repo</button>
+      <button className="back-link" onClick={onReset} title="Analyze another repository"><ArrowLeft /><span>Analyze another repo</span></button>
       <div className="repo-block"><span className="repo-avatar">{meta.name.slice(0, 2).toUpperCase()}</span><div><small>{meta.fullName.split('/')[0]}</small><strong>{meta.name}</strong></div></div>
-      <nav className="side-nav">{tabs.map(t => <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => { setTab(t.id); setSidebar(false) }}>{t.icon}{t.label}{t.id === 'api' && analysis.endpoints.length > 0 && <em>{analysis.endpoints.length}</em>}</button>)}</nav>
+      <nav className="side-nav" aria-label="Repository analysis sections">{tabs.map(t => <button key={t.id} title={sidebarCollapsed ? t.label : undefined} className={tab === t.id ? 'active' : ''} onClick={() => { setTab(t.id); setSidebar(false) }}>{t.icon}<span>{t.label}</span>{t.id === 'api' && analysis.endpoints.length > 0 && <em>{analysis.endpoints.length}</em>}</button>)}</nav>
       <div className="sidebar-foot"><span><CircleDot /> Analysis complete</span><small>{analysis.fetchedFiles} source files analyzed</small></div>
     </aside>
+    {sidebar && <button className="sidebar-scrim" onClick={() => setSidebar(false)} aria-label="Close navigation" />}
 
     <div className="dashboard-main">
-      <header className="dashboard-header"><button className="menu-button" onClick={() => setSidebar(true)}><Menu /></button><div><span className="header-owner">{meta.fullName.split('/')[0]} /</span> <b>{meta.name}</b><span className="public-badge">PUBLIC</span></div><div className="header-actions"><a href={meta.url} target="_blank" rel="noreferrer"><GitFork /> View repo <ExternalLink /></a><button onClick={exportMarkdown}><BookOpen /> Report</button><button onClick={exportJson}><Download /> JSON</button></div></header>
+      <header className="dashboard-header"><button className="menu-button" onClick={() => setSidebar(true)} aria-label="Open navigation"><Menu /></button><button className="desktop-sidebar-toggle" onClick={toggleSidebar} aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>{sidebarCollapsed ? <PanelLeftOpen /> : <PanelLeftClose />}</button><div className="header-repository"><span className="header-owner">{meta.fullName.split('/')[0]} /</span> <b>{meta.name}</b><span className={`public-badge ${meta.dataSource === 'cdn' ? 'fallback' : ''}`}>{meta.dataSource === 'cdn' ? 'CDN FALLBACK' : 'PUBLIC'}</span></div><div className="header-actions"><button className="theme-toggle dashboard-theme" type="button" onClick={onToggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>{theme === 'dark' ? <Sun /> : <Moon />}<span>{theme === 'dark' ? 'Light' : 'Dark'}</span></button><a href={meta.url} target="_blank" rel="noreferrer"><GitFork /> View repo <ExternalLink /></a><button onClick={exportMarkdown}><BookOpen /> Report</button><button onClick={exportJson}><Download /> JSON</button></div></header>
       <main className="dashboard-content">
         {tab === 'overview' && <Overview result={result} onNavigate={setTab} />}
         {tab === 'guide' && <DeveloperGuideView result={result} onNavigate={setTab} />}
@@ -77,7 +85,7 @@ export function Dashboard({ result, onReset }: { result: RepoResult; onReset: ()
 function Overview({ result, onNavigate }: { result: RepoResult; onNavigate: (t: Tab) => void }) {
   const { meta, files, analysis } = result
   return <>
-    <section className="welcome-row"><div><div className="section-kicker">REPOSITORY OVERVIEW</div><h1>{meta.name}</h1><p>{meta.description}</p><div className="meta-row"><span><Star /> {meta.stars.toLocaleString()}</span><span><GitBranch /> {meta.forks.toLocaleString()}</span><span><CircleDot /> {meta.defaultBranch}</span><span>Updated {new Date(meta.updatedAt).toLocaleDateString()}</span></div></div><div className="confidence-card"><span>ANALYSIS COVERAGE</span><strong>{Math.min(100, Math.round(analysis.fetchedFiles / Math.max(analysis.fetchedFiles, 80) * 100))}%</strong><small>{analysis.fetchedFiles} high-signal files inspected</small></div></section>
+    <section className="welcome-row"><div><div className="section-kicker">REPOSITORY OVERVIEW</div><h1>{meta.name}</h1><p>{meta.description}</p><div className="meta-row">{meta.dataSource === 'cdn' ? <span className="fallback-meta"><CloudDownload /> Automatic CDN fallback</span> : <><span><Star /> {meta.stars.toLocaleString()}</span><span><GitBranch /> {meta.forks.toLocaleString()}</span><span><CircleDot /> {meta.defaultBranch}</span><span>Updated {new Date(meta.updatedAt).toLocaleDateString()}</span></>}</div></div><div className="confidence-card"><span>ANALYSIS COVERAGE</span><strong>{Math.min(100, Math.round(analysis.fetchedFiles / Math.max(analysis.fetchedFiles, 80) * 100))}%</strong><small>{analysis.fetchedFiles} high-signal files inspected</small></div></section>
     <section className="summary-card"><div className="summary-icon"><SparkIcon /></div><div><span>REPOLENS SUMMARY</span><p>{analysis.summary}</p></div></section>
     <section className="profile-banner"><div><span className="section-kicker">SOFTWARE PROFILE</span><h3>{analysis.profile.primaryKind}</h3><p>{analysis.profile.kinds.join(' · ')}</p></div><div><small>Target platforms</small><p>{analysis.profile.platforms.length ? analysis.profile.platforms.join(', ') : 'Platform not proven'}</p></div><div><small>Architecture</small><p>{analysis.profile.architectureStyle.join(', ')}</p></div><button onClick={() => onNavigate('guide')}>Open developer guide <ChevronRight /></button></section>
     <section className="stats-grid">

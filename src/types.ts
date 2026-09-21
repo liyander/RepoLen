@@ -25,6 +25,7 @@ export interface RepoMeta {
   defaultBranch: string
   language: string | null
   updatedAt: string
+  dataSource?: 'github' | 'cdn'
 }
 
 export interface CommitInfo {

@@ -62,13 +62,13 @@ function extractSymbols(path: string, text: string): CodeSymbol[] {
     for (const m of text.matchAll(/(^|\n)type\s+([A-Za-z_]\w*)\s+struct/g)) add(m[2], 'class', m.index, `struct ${m[2]}`, /^[A-Z]/.test(m[2]))
   } else if (/\.java$/i.test(path)) {
     for (const m of text.matchAll(/(?:public\s+)?(?:abstract\s+)?(?:class|interface|record)\s+([A-Za-z_]\w*)/g)) add(m[1], 'class', m.index, m[0], /public/.test(m[0]))
-    for (const m of text.matchAll(/(?:public|protected|private)\s+(?:static\s+)?[\w<>?,.\[\]]+\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/g)) add(m[1], 'method', m.index, `${m[1]}(${m[2]})`, m[0].startsWith('public'))
+    for (const m of text.matchAll(/(?:public|protected|private)\s+(?:static\s+)?[\w<>?,.[\]]+\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/g)) add(m[1], 'method', m.index, `${m[1]}(${m[2]})`, m[0].startsWith('public'))
   } else if (/\.(c|cc|cpp|cxx|h|hpp)$/i.test(path)) {
-    for (const m of text.matchAll(/(?:^|\n)\s*(?:template\s*<[^>]+>\s*)?(?:static\s+|inline\s+|virtual\s+|constexpr\s+)*[\w:*&<>\[\]]+\s+([A-Za-z_]\w*(?:::\w+)?)\s*\(([^;{}]*)\)\s*(?:const\s*)?\{/g)) add(m[1], m[1].includes('::') ? 'method' : 'function', m.index, `${m[1]}(${m[2]})`, !/\bstatic\b/.test(m[0]))
+    for (const m of text.matchAll(/(?:^|\n)\s*(?:template\s*<[^>]+>\s*)?(?:static\s+|inline\s+|virtual\s+|constexpr\s+)*[\w:*&<>[\]]+\s+([A-Za-z_]\w*(?:::\w+)?)\s*\(([^;{}]*)\)\s*(?:const\s*)?\{/g)) add(m[1], m[1].includes('::') ? 'method' : 'function', m.index, `${m[1]}(${m[2]})`, !/\bstatic\b/.test(m[0]))
     for (const m of text.matchAll(/(?:class|struct)\s+([A-Za-z_]\w*)/g)) add(m[1], 'class', m.index, m[0], /class/.test(m[0]))
   } else if (/\.(cs|fs)$/i.test(path)) {
     for (const m of text.matchAll(/(?:public\s+|internal\s+|private\s+|protected\s+)?(?:abstract\s+|sealed\s+|static\s+|partial\s+)*(?:class|interface|record|struct)\s+([A-Za-z_]\w*)/g)) add(m[1], 'class', m.index, m[0], /^public/.test(m[0]))
-    for (const m of text.matchAll(/(?:public|internal|private|protected)\s+(?:static\s+|async\s+|virtual\s+|override\s+)*[\w<>?,.\[\]]+\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/g)) add(m[1], 'method', m.index, `${m[1]}(${m[2]})`, m[0].startsWith('public'))
+    for (const m of text.matchAll(/(?:public|internal|private|protected)\s+(?:static\s+|async\s+|virtual\s+|override\s+)*[\w<>?,.[\]]+\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/g)) add(m[1], 'method', m.index, `${m[1]}(${m[2]})`, m[0].startsWith('public'))
   } else if (/\.(kt|kts)$/i.test(path)) {
     for (const m of text.matchAll(/(?:^|\n)\s*(?:public\s+|private\s+|internal\s+)?(?:data\s+|sealed\s+|abstract\s+)?(?:class|interface|object)\s+([A-Za-z_]\w*)/g)) add(m[1], 'class', m.index, m[0], !/private/.test(m[0]))
     for (const m of text.matchAll(/(?:^|\n)\s*(?:public\s+|private\s+|internal\s+|suspend\s+|override\s+)*fun\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/g)) add(m[1], 'function', m.index, `${m[1]}(${m[2]})`, !/private/.test(m[0]))
@@ -156,7 +156,7 @@ export function analyzeRepository(meta: RepoMeta, tree: RepoFile[], fetched: Rep
   const dependencies = new Set<string>()
   textFiles.forEach(({ path, text }) => {
     if (path.endsWith('package.json')) try { const p = JSON.parse(text); Object.keys({ ...(p.dependencies || {}), ...(p.devDependencies || {}) }).forEach(x => dependencies.add(x)) } catch { /* ignore malformed manifests */ }
-    if (/requirements[^/]*\.txt$/i.test(path)) text.split('\n').map(x => x.trim().split(/[=<>~!\[]/)[0]).filter(x => x && !x.startsWith('#')).forEach(x => dependencies.add(x))
+    if (/requirements[^/]*\.txt$/i.test(path)) text.split('\n').map(x => x.trim().split(/[=<>~![]/)[0]).filter(x => x && !x.startsWith('#')).forEach(x => dependencies.add(x))
     if (/Cargo\.toml$/i.test(path)) for (const m of text.matchAll(/^([A-Za-z][\w-]*)\s*=\s*(?:["'{])/gm)) if (!['name', 'version', 'edition', 'workspace'].includes(m[1])) dependencies.add(m[1])
     if (/go\.mod$/i.test(path)) for (const m of text.matchAll(/^\s*([\w.-]+\/[\w./-]+)\s+v\d/gm)) dependencies.add(m[1])
     if (/pubspec\.yaml$/i.test(path)) { const block = text.match(/dependencies:\s*\n([\s\S]*?)(?:\ndev_dependencies:|\n\S)/)?.[1] || ''; for (const m of block.matchAll(/^\s{2}([\w-]+):/gm)) dependencies.add(m[1]) }

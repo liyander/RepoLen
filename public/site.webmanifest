@@ -1,0 +1,17 @@
+{
+  "name": "RepoLens — Visual GitHub Repository Analysis",
+  "short_name": "RepoLens",
+  "description": "Analyze GitHub repositories through interactive architecture, dependency, flow, security, and impact visualizations.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07100d",
+  "theme_color": "#08100e",
+  "icons": [
+    {
+      "src": "/repolens-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

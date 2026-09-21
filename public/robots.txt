@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://repolen-957ab.web.app/sitemap.xml

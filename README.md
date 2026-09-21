@@ -6,12 +6,32 @@ RepoLens is a client-side code-intelligence application for public GitHub reposi
 
 RepoLens is not limited to websites. It recognizes backend services, native and desktop applications, mobile apps, CLI tools, libraries and SDKs, games, embedded firmware, data/ML projects, infrastructure repositories, and monorepos.
 
+**Live application:** [https://repolen-957ab.web.app](https://repolen-957ab.web.app)
+
+Additional pages:
+
+- [About RepoLens](https://repolen-957ab.web.app/about)
+- [RepoLens for Developers](https://repolen-957ab.web.app/developers)
+
+## Recent updates
+
+- Added persistent light and dark themes with a complete high-contrast light palette
+- Increased typography and spacing throughout the analyzer and dashboard
+- Added a collapsible, remembered desktop sidebar and improved mobile navigation
+- Added dedicated About and Developer pages
+- Added automatic jsDelivr fallback when the unauthenticated GitHub API quota is exhausted
+- Added visible fallback diagnostics for unavailable live repository metadata
+- Added Google Search Console verification and expanded technical SEO
+- Added Firebase Hosting headers, caching rules, and SPA route support
+- Added ESLint flat configuration and CDN-fallback regression coverage
+
 ## Core principles
 
 - **Static analysis first:** conclusions come from repository structure and source evidence.
 - **Evidence over guesses:** findings include the files that produced them.
 - **Safe by design:** repository code is never executed or installed.
 - **Useful partial results:** unsupported or oversized areas do not fail the entire analysis.
+- **Resilient acquisition:** GitHub rate limits automatically trigger a public CDN fallback.
 - **Client-side by default:** no permanent backend, account, or repository upload is required.
 
 ## Features
@@ -122,6 +142,32 @@ These are engineering signals, not definitive defect or vulnerability claims.
 - Developer-friendly Markdown report export
 - Local recent-repository history
 
+### Interface and accessibility
+
+- Persistent dark and light themes
+- High-contrast light-theme text, icons, badges, code chips, and graph controls
+- Collapsible desktop sidebar with a remembered preference
+- Mobile navigation drawer with an overlay and independently scrolling navigation
+- Larger typography and spacing across analysis views
+- Responsive layouts for desktop, tablet, and mobile screens
+- Accessible labels and tooltips for icon-only controls
+
+### Product and developer documentation
+
+- Dedicated About page explaining RepoLens, its purpose, and its creator
+- Dedicated Developer page documenting the acquisition and analysis pipeline
+- Supported-capability, resilience, safety, and analysis-boundary explanations
+- Direct navigation between the analyzer, About page, and Developer page
+
+### Search and discoverability
+
+- Search-engine title and description metadata
+- Canonical URL, robots directives, Open Graph, and Twitter metadata
+- WebSite, WebApplication, and Person structured data
+- `robots.txt`, XML sitemap, web manifest, favicon, and social preview image
+- Google Search Console verification
+- Sitemap entries for the home, About, and Developer pages
+
 ## Supported languages
 
 RepoLens currently provides language-aware analysis for:
@@ -164,7 +210,9 @@ Large repositories intentionally produce a representative analysis instead of at
 Public GitHub URL
         |
         v
-Repository metadata + recursive tree + recent commits
+GitHub metadata + recursive tree + recent commits
+        |
+        +---- rate limited ----> jsDelivr public file index + CDN source
         |
         v
 File prioritization and browser resource limits
@@ -193,9 +241,17 @@ src/
 |-- types.ts                 Normalized analysis model
 |-- components/
 |   |-- Home.tsx             Repository input and analysis depth
-|   `-- Dashboard.tsx        Analysis workspaces and visualizations
+|   |-- Dashboard.tsx        Analysis workspaces and visualizations
+|   `-- InfoPages.tsx        About and developer documentation pages
 |-- storage.ts               Local recent-repository history
 `-- styles.css               Responsive application design
+
+public/
+|-- robots.txt               Search crawler rules
+|-- sitemap.xml              Search-engine route discovery
+|-- site.webmanifest         Installable web metadata
+|-- repolens-icon.svg        Application icon
+`-- og-card.svg              Social sharing image
 ```
 
 ## Safety model
@@ -233,6 +289,7 @@ Open `http://localhost:5173` and submit a public GitHub repository URL.
 
 ```bash
 npm run dev       # Start the Vite development server
+npm run lint      # Run ESLint
 npm test          # Run the Vitest suite once
 npm run build     # Type-check and create a production build
 npm run preview   # Preview the production build locally
@@ -240,10 +297,11 @@ npm run preview   # Preview the production build locally
 
 ## Verification
 
-The test suite covers URL parsing, file prioritization, deep symbol and dependency analysis, models, configuration, flows, embedded firmware, Flutter, Unity, .NET, symbol calls, dependency cycles, test mapping, architecture rules, and maintainability metrics.
+The 13-test suite covers URL parsing, file prioritization, the public-CDN fallback, deep symbol and dependency analysis, models, configuration, flows, embedded firmware, Flutter, Unity, .NET, symbol calls, dependency cycles, test mapping, architecture rules, and maintainability metrics.
 
 ```bash
 npm test
+npm run lint
 npm run build
 ```
 
@@ -260,18 +318,39 @@ firebase deploy --only hosting
 
 Firebase should publish the `dist/` directory. The included rewrite directs application routes back to `index.html`.
 
+The hosting configuration also supplies cache behavior, MIME-safe delivery, referrer policy, permissions policy, and SPA routing for `/about`, `/developers`, and repository result URLs.
+
+Current Firebase project and hosting URL:
+
+```text
+Project: repolen-957ab
+URL:     https://repolen-957ab.web.app
+```
+
 ## GitHub API limitations
 
-RepoLens intentionally avoids shipping a GitHub token. Unauthenticated GitHub API access is rate-limited, so an analysis may be unavailable after repeated requests from the same network.
+RepoLens intentionally avoids shipping a GitHub token. Unauthenticated GitHub API access is rate-limited, so RepoLens automatically switches to a public jsDelivr file index and CDN source delivery when that quota is exhausted. Analysis continues, while the dashboard labels that live stars, forks, and recent commits may be unavailable.
 
-The acquisition strategy uses:
+The primary GitHub acquisition strategy uses:
 
 1. One repository metadata request
 2. One recursive tree request
 3. One recent-commits request when available
 4. Raw-content requests only for prioritized files
 
-If recent history cannot be retrieved, the rest of the repository analysis can still complete.
+If metadata or the tree cannot be retrieved because of the GitHub quota, the token-free fallback obtains the repository file index and prioritized source from jsDelivr. The dashboard displays a **CDN FALLBACK** label and a diagnostic warning because live stars, forks, branch metadata, and commit history may be missing.
+
+The fallback flow is:
+
+```text
+GitHub REST API
+      |
+      +-- available --> live metadata, tree, history, and raw source
+      |
+      `-- rate limited --> jsDelivr @HEAD file index and prioritized CDN source
+```
+
+Repositories that exceed jsDelivr's public GitHub-package limits may still need to wait for the GitHub quota to reset. RepoLens never embeds a shared personal access token in its client bundle.
 
 ## Current limitations
 
@@ -281,6 +360,7 @@ If recent history cannot be retrieved, the rest of the repository analysis can s
 - Static call graphs are approximate rather than compiler-complete
 - Generated files, reflection, macros, runtime plugins, and dynamic imports may hide relationships
 - Analysis coverage is bounded by the selected mode and browser resources
+- CDN fallback availability is subject to jsDelivr's public GitHub-package limits
 - No persistent cloud workspace or team collaboration
 - No AI repository chat without a secure model proxy
 
@@ -306,6 +386,8 @@ Features that require additional infrastructure or authenticated provider access
 - React Flow
 - Lucide icons
 - Vitest
+- ESLint flat configuration
+- jsDelivr public data and file CDN fallback
 - Firebase Hosting configuration
 
 ## Contributing

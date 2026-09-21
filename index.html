@@ -1,14 +1,96 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#08100e" />
-    <meta name="description" content="Map and understand public codebases in your browser." />
-    <title>RepoLens — See the system inside the repository</title>
+    <script>
+      try {
+        const savedTheme = localStorage.getItem('repolens-theme')
+        const theme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+        document.documentElement.dataset.theme = theme
+        document.documentElement.style.colorScheme = theme
+        document.querySelector('meta[name="theme-color"]').content = theme === 'light' ? '#f5f8f6' : '#08100e'
+      } catch { /* The React app applies the default theme if storage is unavailable. */ }
+    </script>
+    <meta name="description" content="RepoLens by Liyander Rishwanth (CyberGhost05) is a free GitHub repository analysis tool for visualizing code architecture, dependencies, execution flows, security surfaces, and change impact." />
+    <meta name="author" content="Liyander Rishwanth (CyberGhost05)" />
+    <meta name="creator" content="Liyander Rishwanth" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="google-site-verification" content="Ms6a-39sUnQ8HBMnp7RDeN94gcPDoL0PsVDz4eKbXK8" />
+    <link rel="canonical" href="https://repolen-957ab.web.app/" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="icon" href="/repolens-icon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RepoLens" />
+    <meta property="og:title" content="RepoLens — Visual GitHub Repository Analysis" />
+    <meta property="og:description" content="Understand any public GitHub repository through architecture maps, component flows, dependency graphs, security surfaces, and developer impact analysis." />
+    <meta property="og:url" content="https://repolen-957ab.web.app/" />
+    <meta property="og:image" content="https://repolen-957ab.web.app/og-card.svg" />
+    <meta property="og:image:alt" content="RepoLens visual GitHub repository analysis by Liyander Rishwanth" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="RepoLens — Visual GitHub Repository Analysis" />
+    <meta name="twitter:description" content="Explore architecture, dependencies, execution flows, code health, and change impact for public GitHub repositories." />
+    <meta name="twitter:image" content="https://repolen-957ab.web.app/og-card.svg" />
+    <title>RepoLens by Liyander Rishwanth | GitHub Repository Analysis</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://repolen-957ab.web.app/#website",
+            "url": "https://repolen-957ab.web.app/",
+            "name": "RepoLens",
+            "alternateName": ["RepoLen", "Repo Lens"],
+            "description": "Visual GitHub repository analysis and code intelligence for developers.",
+            "inLanguage": "en",
+            "creator": { "@id": "https://repolen-957ab.web.app/#creator" }
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://repolen-957ab.web.app/#application",
+            "name": "RepoLens",
+            "alternateName": "RepoLen",
+            "url": "https://repolen-957ab.web.app/",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Any modern web browser",
+            "browserRequirements": "Requires JavaScript",
+            "isAccessibleForFree": true,
+            "description": "Analyze public GitHub repositories with interactive architecture, dependency, execution-flow, security-surface, and change-impact visualizations.",
+            "featureList": [
+              "GitHub repository analysis",
+              "Interactive software architecture visualization",
+              "Dependency and call graphs",
+              "Code health and security surface analysis",
+              "Developer change impact analysis"
+            ],
+            "author": { "@id": "https://repolen-957ab.web.app/#creator" }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://repolen-957ab.web.app/#creator",
+            "name": "Liyander Rishwanth",
+            "alternateName": ["Liyander", "CyberGhost05", "CyberGhost"],
+            "url": "https://repolen-957ab.web.app/",
+            "sameAs": ["https://github.com/CyberGhost05"],
+            "knowsAbout": ["Software development", "Static analysis", "Cybersecurity", "GitHub repository analysis"]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <main>
+        <h1>RepoLens — Visual GitHub Repository Analysis</h1>
+        <p>RepoLens is a free code intelligence and GitHub analysis tool created by Liyander Rishwanth, also known as CyberGhost05. Enable JavaScript to analyze repository architecture, dependencies, execution flows, code health, security surfaces, and developer change impact.</p>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

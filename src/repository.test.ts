@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest'
-import { parseRepositoryUrl, prioritizeFiles } from './repository'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { getCdnRepository, parseRepositoryUrl, prioritizeFiles } from './repository'
 import { analyzeRepository } from './analyzer'
 import type { RepoFile, RepoMeta } from './types'
+
+afterEach(() => vi.unstubAllGlobals())
 
 describe('parseRepositoryUrl', () => {
   it('parses a public GitHub repository', () => expect(parseRepositoryUrl('https://github.com/facebook/react')).toEqual({ provider: 'github', owner: 'facebook', repository: 'react' }))
@@ -17,6 +19,18 @@ describe('prioritizeFiles', () => {
   it('skips build output and binary content', () => {
     const files = [{ path: 'dist/app.js', type: 'blob' as const, size: 12, sha: '1' }, { path: 'logo.png', type: 'blob' as const, size: 12, sha: '2' }]
     expect(prioritizeFiles(files)).toHaveLength(0)
+  })
+})
+
+describe('rate-limit fallback', () => {
+  it('builds a repository index from the public CDN response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ files: [
+      { name: '/src/index.ts', size: 42, hash: 'abc' },
+      { name: '/package.json', size: 18, hash: 'def' },
+    ] }), { status: 200 })))
+    const result = await getCdnRepository({ provider: 'github', owner: 'example', repository: 'project' })
+    expect(result.meta).toEqual(expect.objectContaining({ fullName: 'example/project', dataSource: 'cdn' }))
+    expect(result.files).toContainEqual(expect.objectContaining({ path: 'src/index.ts', type: 'blob', size: 42 }))
   })
 })
 

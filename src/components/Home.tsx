@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { ArrowRight, Braces, Check, GitBranch, GitFork, Layers3, LockKeyhole, Network, Sparkles } from 'lucide-react'
+import { ArrowRight, Braces, Check, GitBranch, GitFork, Layers3, LockKeyhole, Moon, Network, Sparkles, Sun } from 'lucide-react'
 import { getRecent } from '../storage'
 import type { AnalysisDepth, AnalysisStage } from '../types'
 
-interface Props { onAnalyze: (url: string, depth?: AnalysisDepth) => void; stage: AnalysisStage; stageText: string; progress: number; error: string }
+interface Props { onAnalyze: (url: string, depth?: AnalysisDepth) => void; stage: AnalysisStage; stageText: string; progress: number; error: string; theme: 'dark' | 'light'; onToggleTheme: () => void }
 
-export function Home({ onAnalyze, stage, stageText, progress, error }: Props) {
+export function Home({ onAnalyze, stage, stageText, progress, error, theme, onToggleTheme }: Props) {
   const [url, setUrl] = useState('')
   const [depth, setDepth] = useState<AnalysisDepth>('deep')
   const recent = getRecent()
@@ -17,8 +17,8 @@ export function Home({ onAnalyze, stage, stageText, progress, error }: Props) {
   return <div className="home-shell">
     <nav className="topbar home-nav">
       <a href="/" className="brand"><span className="brand-mark"><Braces size={19} /></span><span>RepoLens</span></a>
-      <div className="nav-links"><a href="#how">How it works</a><a href="#capabilities">Capabilities</a><span className="local-pill"><LockKeyhole size={13} /> Client-side</span></div>
-      <a className="github-link" href="https://github.com" target="_blank" rel="noreferrer"><GitFork size={17} /> GitHub</a>
+      <div className="nav-links"><a href="#how">How it works</a><a href="#capabilities">Capabilities</a><a href="/about">About</a><a href="/developers">Developers</a><span className="local-pill"><LockKeyhole size={13} /> Client-side</span></div>
+      <div className="home-actions"><button className="theme-toggle" type="button" onClick={onToggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>{theme === 'dark' ? <Sun /> : <Moon />}<span>{theme === 'dark' ? 'Light' : 'Dark'}</span></button><a className="github-link" href="https://github.com" target="_blank" rel="noreferrer"><GitFork size={17} /> GitHub</a></div>
     </nav>
 
     <main>
@@ -59,10 +59,16 @@ export function Home({ onAnalyze, stage, stageText, progress, error }: Props) {
         </div>
       </section>
 
+      <section id="capabilities" className="seo-section" aria-labelledby="seo-heading">
+        <div><div className="section-kicker">GITHUB REPOSITORY ANALYSIS</div><h2 id="seo-heading">Code intelligence for every kind of software.</h2></div>
+        <div className="seo-copy"><p><strong>RepoLens</strong> (also searched as RepoLen) helps developers understand public GitHub repositories without cloning or executing their code. It maps architecture, modules, dependencies, functions, classes, execution flows, data models, tests, external services, security-sensitive boundaries, and the impact of proposed changes.</p><p>Created by <strong>Liyander Rishwanth</strong>, also known as <a href="https://github.com/CyberGhost05" target="_blank" rel="author noreferrer">CyberGhost05 on GitHub</a>, RepoLens supports web applications, backend services, native and desktop software, mobile apps, CLI tools, SDKs, games, embedded firmware, data and machine-learning systems, infrastructure, and monorepos.</p></div>
+        <div className="seo-features"><article><Network /><h3>Visual architecture analysis</h3><p>Explore system, module, component, import, and symbol call graphs with direct source evidence.</p></article><article><GitBranch /><h3>Execution and data flows</h3><p>Trace API requests, startup sequences, callbacks, commands, services, storage, and hardware interactions.</p></article><article><LockKeyhole /><h3>Developer impact analysis</h3><p>Find callers, affected files, relevant tests, architecture risks, and code-health signals before changing code.</p></article></div>
+      </section>
+
       {recent.length > 0 && <section className="recent-section"><div><div className="section-kicker">RECENT</div><h2>Pick up where you left off.</h2></div><div className="recent-list">
         {recent.map(repo => <button key={repo.fullName} onClick={() => onAnalyze(repo.url)}><span className="repo-avatar">{repo.fullName.split('/')[1]?.slice(0, 2).toUpperCase()}</span><span><b>{repo.fullName}</b><small>{repo.description}</small></span><ArrowRight /></button>)}
       </div></section>}
     </main>
-    <footer><a className="brand"><span className="brand-mark"><Braces size={16} /></span>RepoLens</a><span>Static analysis first. AI second.</span><span>Built for curious engineers.</span></footer>
+    <footer><a className="brand" href="/"><span className="brand-mark"><Braces size={16} /></span>RepoLens</a><span><a href="/about">About</a> · <a href="/developers">Developers</a></span><span>Created by <a href="https://github.com/CyberGhost05" rel="author">Liyander Rishwanth · CyberGhost05</a></span></footer>
   </div>
 }

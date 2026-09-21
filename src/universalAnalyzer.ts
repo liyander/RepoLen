@@ -113,7 +113,7 @@ export function analyzeUniversalSoftware(ctx: UniversalContext): { profile: Proj
 function extractCommands(ctx: UniversalContext, profile: ProjectProfile): DevCommand[] {
   const commands: DevCommand[] = []; const add = (label: string, command: string, kind: DevCommand['kind'], source: string, inferred = false) => { if (!commands.some(x => x.command === command)) commands.push({ label, command, kind, source, inferred }) }
   ctx.textFiles.forEach(({ path, text }) => {
-    if (path.endsWith('package.json')) try { const scripts = JSON.parse(text).scripts || {}; Object.entries(scripts).forEach(([name, value]) => add(name, `npm run ${name}`, /test/i.test(name) ? 'test' : /build|compile/i.test(name) ? 'build' : /lint|format|check/i.test(name) ? 'lint' : /start|dev|serve/i.test(name) ? 'run' : 'other', path)) } catch { /* malformed manifest */ }
+    if (path.endsWith('package.json')) try { const scripts = JSON.parse(text).scripts || {}; Object.keys(scripts).forEach(name => add(name, `npm run ${name}`, /test/i.test(name) ? 'test' : /build|compile/i.test(name) ? 'build' : /lint|format|check/i.test(name) ? 'lint' : /start|dev|serve/i.test(name) ? 'run' : 'other', path)) } catch { /* malformed manifest */ }
     if (/(^|\/)Makefile$/i.test(path)) for (const m of text.matchAll(/^([A-Za-z][\w.-]*):(?:\s|$)/gm)) if (!/^(all|default)$/.test(m[1])) add(`make ${m[1]}`, `make ${m[1]}`, /test|check/.test(m[1]) ? 'test' : /build|release/.test(m[1]) ? 'build' : /run|start/.test(m[1]) ? 'run' : 'other', path)
   })
   const paths = ctx.tree.map(x => x.path)
